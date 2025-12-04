@@ -85,13 +85,15 @@ def load_relevant_data():
                     "vader_score_title": vader_score_title,
                     "vader_score_snippet": vader_score_snippet
                 })
+                # turn our rows list of rows into a dataframe so that we can turn it into an sql table in our database
+                test_df = pd.DataFrame(rows) 
+                # finally turning our dataframe into the long-awaited sql table that goes in the database.
+                # we do this NOW in case we have to stop the task, because we don't have to re-pull EVERYTHING back from our api.
+                # (we can just change the range of years, months from where we stopped)
+                con.execute(f"INSERT INTO NYT_TEST5 SELECT * FROM test_df")
         # sleep command because the nyt api does not allow more than 5 api calls a minute. 
         time.sleep(12)
 
-    # turn our rows list of rows into a dataframe so that we can turn it into an sql table in our database
-    test_df = pd.DataFrame(rows) 
-    # finally turning our dataframe into the long-awaited sql table that goes in the database
-    con.execute(f"INSERT INTO NYT_TEST5 SELECT * FROM test_df")
     # 'task completion' notification to make me feel less nervous
     print("Task complete; data loaded into the database!")
 
