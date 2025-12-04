@@ -1,3 +1,4 @@
+# (this should've would've could've been a requirements.txt) 
 import requests
 import time 
 import duckdb
@@ -5,6 +6,7 @@ import pandas as pd
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from prefect import task, flow
 import matplotlib.pyplot as plt
+import textwrap
 import os
 
 # fetching secret key from our environment. 
@@ -123,18 +125,19 @@ def transform_data():
 # finally creating our chart
 @task(retries=3, retry_delay_seconds=5, log_prints=True)
 def generate_chart():
-    import matplotlib.pyplot as plt
     con = duckdb.connect("nyt_db.duckdb")
     
     # Load transformed data
-    df = con.execute("SELECT * FROM NYT_DATA_FINAL ORDER BY month").df()
-    
-    print(df.head())
+    df = con.execute("SELECT * FROM NYT_DATA_FOR_CHART13 ORDER BY month").df()
+
+    # forcing to start chart at 1924
+    plt.xlim(pd.Timestamp("1924-01-01"), df["month"].max())
+
     # plot
     plt.figure(figsize=(10, 5))
     plt.plot(df["month"], df["mean_vscore_title"],
              label="Title Sentiment",
-             color="darkred",
+             color="skyblue",
              linewidth=2)
     
     plt.plot(df["month"], df["mean_vscore_snippet"],
@@ -149,24 +152,38 @@ def generate_chart():
         1998: "Google's Official Launch",
         2007: "Apple's iPhone Launched"
     }
-    
+
+    y_bottom = df["mean_vscore_title"].max() - 0.05
+
+    # formatting to make our chart more legible. 
     for year, label in events.items():
+        x = pd.Timestamp(f"{year}-01-01")
         plt.axvline(pd.Timestamp(f"{year}-01-01"), color="black", linestyle="--", linewidth=1)
-        plt.text(pd.Timestamp(f"{year}-01-01"),
-                 df["mean_vscore_title"].max(),
-                 label,
-                 rotation=90,
-                 verticalalignment="bottom",
-                 horizontalalignment="right")
+        wrapped = textwrap.fill(label, width=18)
+        plt.text(
+            x,
+            y_bottom,
+            wrapped,
+            rotation=90,            # Horizontal
+            fontsize=9,
+            ha="center",
+            va="top",
+            bbox=dict(
+                facecolor="white",
+                edgecolor="gray",
+                boxstyle="round,pad=0.3",
+                alpha=0.8
+            )
+    )
+    
     
     # title and subtitle
     plt.suptitle("NYT Vader-Calculated Sentiment Over Time",
                  fontsize=16,
                  fontweight="bold",
                  ha="left",
-                 x=0.0)
+                 x=0.05)
     
-    plt.title("nice job america", fontsize=12, loc="left")
     
     plt.xlabel("Month")
     plt.ylabel("Average Sentiment Score")
@@ -181,7 +198,6 @@ def generate_chart():
     
     # output path to our graph (it's a png image now) 
     return output_path
-
 
 
 # if we don't use this, nothing happens. 
