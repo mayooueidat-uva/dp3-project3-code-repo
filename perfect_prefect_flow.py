@@ -124,64 +124,63 @@ def transform_data():
 @task(retries=3, retry_delay_seconds=5, log_prints=True)
 def generate_chart():
     import matplotlib.pyplot as plt
-import duckdb
-con = duckdb.connect("nyt_db.duckdb")
-
-# Load transformed data
-df = con.execute("SELECT * FROM NYT_DATA_FINAL ORDER BY month").df()
-
-print(df.head())
-# plot
-plt.figure(figsize=(10, 5))
-plt.plot(df["month"], df["mean_vscore_title"],
-         label="Title Sentiment",
-         color="darkred",
-         linewidth=2)
-
-plt.plot(df["month"], df["mean_vscore_snippet"],
-         label="Snippet Sentiment",
-         color="darkblue",
-         linewidth=2)
-
-# so we can see when sensationalisation corresponds with certain events...
-events = {
-    1928: "First Television Broadcast",
-    1973: "Motorola Invents First Cellphone",
-    1998: "Google's Official Launch",
-    2007: "Apple's iPhone Launched"
-}
-
-for year, label in events.items():
-    plt.axvline(pd.Timestamp(f"{year}-01-01"), color="black", linestyle="--", linewidth=1)
-    plt.text(pd.Timestamp(f"{year}-01-01"),
-             df["mean_vscore_title"].max(),
-             label,
-             rotation=90,
-             verticalalignment="bottom",
-             horizontalalignment="right")
-
-# title and subtitle
-plt.suptitle("NYT Vader-Calculated Sentiment Over Time",
-             fontsize=16,
-             fontweight="bold",
-             ha="left",
-             x=0.0)
-
-plt.title("nice job america", fontsize=12, loc="left")
-
-plt.xlabel("Month")
-plt.ylabel("Average Sentiment Score")
-plt.legend()
-plt.xticks(rotation=45)
-plt.tight_layout()
-
-# making a png image of our graph. 
-output_path = "nyt_sentiment_plot.png"
-plt.savefig(output_path)
-print(f"Saved plot to {output_path}")
-
-# output path to our graph (it's a png image now) 
-return output_path
+    con = duckdb.connect("nyt_db.duckdb")
+    
+    # Load transformed data
+    df = con.execute("SELECT * FROM NYT_DATA_FINAL ORDER BY month").df()
+    
+    print(df.head())
+    # plot
+    plt.figure(figsize=(10, 5))
+    plt.plot(df["month"], df["mean_vscore_title"],
+             label="Title Sentiment",
+             color="darkred",
+             linewidth=2)
+    
+    plt.plot(df["month"], df["mean_vscore_snippet"],
+             label="Snippet Sentiment",
+             color="darkblue",
+             linewidth=2)
+    
+    # so we can see when sensationalisation corresponds with certain events...
+    events = {
+        1928: "First Television Broadcast",
+        1973: "Motorola Invents First Cellphone",
+        1998: "Google's Official Launch",
+        2007: "Apple's iPhone Launched"
+    }
+    
+    for year, label in events.items():
+        plt.axvline(pd.Timestamp(f"{year}-01-01"), color="black", linestyle="--", linewidth=1)
+        plt.text(pd.Timestamp(f"{year}-01-01"),
+                 df["mean_vscore_title"].max(),
+                 label,
+                 rotation=90,
+                 verticalalignment="bottom",
+                 horizontalalignment="right")
+    
+    # title and subtitle
+    plt.suptitle("NYT Vader-Calculated Sentiment Over Time",
+                 fontsize=16,
+                 fontweight="bold",
+                 ha="left",
+                 x=0.0)
+    
+    plt.title("nice job america", fontsize=12, loc="left")
+    
+    plt.xlabel("Month")
+    plt.ylabel("Average Sentiment Score")
+    plt.legend()
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    
+    # making a png image of our graph. 
+    output_path = "nyt_sentiment_plot.png"
+    plt.savefig(output_path)
+    print(f"Saved plot to {output_path}")
+    
+    # output path to our graph (it's a png image now) 
+    return output_path
 
 
 
