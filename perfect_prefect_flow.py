@@ -113,7 +113,7 @@ def transform_data():
                 DATE_TRUNC('month', pubdate) AS month,
                 AVG(vader_score_title) AS mean_vscore_title,
                 AVG(vader_score_snippet) AS mean_vscore_snippet
-                FROM NYT_TEST3
+                FROM NYT_RAW_DATA
                 GROUP BY DATE_TRUNC('month', pubdate)
                 ORDER BY month;
                 """)
