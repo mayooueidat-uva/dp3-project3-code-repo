@@ -128,7 +128,7 @@ def generate_chart():
     con = duckdb.connect("nyt_db.duckdb")
     
     # Load transformed data
-    df = con.execute("SELECT * FROM NYT_DATA_FOR_CHART13 ORDER BY month").df()
+    df = con.execute("SELECT * FROM NYT_DATA_FINAL ORDER BY month").df()
 
     # forcing to start chart at 1924
     plt.xlim(pd.Timestamp("1924-01-01"), df["month"].max())
