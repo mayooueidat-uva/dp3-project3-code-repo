@@ -1,4 +1,14 @@
 # dp3-project3-code-repo
-code repository for dp3
-
-yeag
+## how sensational!: using sentiment analysis to investigate correlations between development of communications technology, and the sensationalisation of news 
+#### about 
+in ninth grade civics class, i learned about how the advent of 24-hour television caused greater political polarisation in the united states and how social media echo chambers only exacerbated the disunity felt between people on opposite sides of the political spectrum. if news is increasingly polarised, and if the development of communications technology have only aided in polarisation, then maybe even the most reliable news must stir the worst of people's emotions in order to compete for their attention. 
+to investigate the relationship between technological evolution and sensationalisation, i conducted sentiment analysis on both headlines and snippets of news articles, using the new york times as a case study. note: sensationalisation is not polarisation; polarisation is more about planting seeds of division while sensationalisation is more about making something as eye-catching and/or shocking as possible. 
+#### limitations
+this study uses *only* the new york times and its api. at first, i was considering looking at the top 3 newspapers (nyt, wsj and wp); however, the washington post does not have an api. the new york times was chosen for easy use of its api, its long history, and the fact that it is the number one most-subscribed newspaper in the united states. 
+#### tools in the pipeline 
++ prefect: allows for easy orchestration of tasks. the data had to be pulled from the api, transformed, and shoved through a sentiment analysis algorithm; furthermore, for the sake of more robust analysis, i had to create a line plot. prefect allows me to do this all with one file, all in one go. 
++ pandas dataframes: for easy storage of data from the api before transformation.
++ duckdb/sql: i needed a more permanent place to store data that i fetched from api calls so i wouldn't have to re-fetch everything any time i had to go back and re-edit my code. duckdb provided this structure. 
++ vader: vader is a sentiment analysis tool specialised for social media posts, but it has been used for news articles as well. further insight: (analysis of vader vs. textblob)[https://jds-online.org/journal/JDS/article/1441/info]
+#### running the pipeline
+Running this pipeline is quite simple; the entire pipeline is condensed into one prefect flow. all one must do is launch a virtual environment, ensure that all the required packages are installed, and run the python file. **NOTE:** you need a key from the new york times developer api, which you will pass into your virtual environment. you can get one for free signing up at https://developer.nytimes.com/ and upon creating an app (instructions for creating an app included on the website). 
