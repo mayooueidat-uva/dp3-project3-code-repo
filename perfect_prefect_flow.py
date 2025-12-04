@@ -90,7 +90,7 @@ def load_relevant_data():
                 # finally turning our dataframe into the long-awaited sql table that goes in the database.
                 # we do this NOW in case we have to stop the task, because we don't have to re-pull EVERYTHING back from our api.
                 # (we can just change the range of years, months from where we stopped)
-                con.execute(f"INSERT INTO NYT_TEST5 SELECT * FROM test_df")
+                con.execute(f"INSERT INTO NYT_RAW_DATA SELECT * FROM test_df")
         # sleep command because the nyt api does not allow more than 5 api calls a minute. 
         time.sleep(12)
 
@@ -108,7 +108,7 @@ def transform_data():
     # creating a new data table with data that's actually relevant for our graphs. 
     # we can't plot the sentiments demonstrated by every single article at every single time stamp, so we must look at aggregates. 
     # sql is great because it allows us to transform lots of our data at once like this. 
-    con.execute(f"""CREATE TABLE NYT_TEST5_FINAL AS
+    con.execute(f"""CREATE TABLE NYT_DATA_FINAL AS
                 SELECT
                 DATE_TRUNC('month', pubdate) AS month,
                 AVG(vader_score_title) AS mean_vscore_title,
@@ -120,33 +120,69 @@ def transform_data():
     # 'task completion' notification to make me feel less nervous
     print("Task complete; table with useable data created.")
 
-# yeah okay fine whatever i'll get to this part
+# finally creating our chart
 @task(retries=3, retry_delay_seconds=5, log_prints=True)
 def generate_chart():
-    con = duckdb.connect("nyt_db.duckdb")
+    import matplotlib.pyplot as plt
+import duckdb
+con = duckdb.connect("nyt_db.duckdb")
 
-    # Load transformed data
-    df = con.execute("SELECT * FROM NYT_TEST5_FINAL ORDER BY month").df()
+# Load transformed data
+df = con.execute("SELECT * FROM NYT_DATA_FINAL ORDER BY month").df()
 
-    print(df.head())
+print(df.head())
+# plot
+plt.figure(figsize=(10, 5))
+plt.plot(df["month"], df["mean_vscore_title"],
+         label="Title Sentiment",
+         color="darkred",
+         linewidth=2)
 
-    # Plot
-    plt.figure(figsize=(10, 5))
-    plt.plot(df["month"], df["mean_vscore_title"], label="Title Sentiment")
-    plt.plot(df["month"], df["mean_vscore_snippet"], label="Snippet Sentiment")
+plt.plot(df["month"], df["mean_vscore_snippet"],
+         label="Snippet Sentiment",
+         color="darkblue",
+         linewidth=2)
 
-    plt.xlabel("Month")
-    plt.ylabel("Average Sentiment Score")
-    plt.title("NYT Sentiment Over Time")
-    plt.legend()
-    plt.xticks(rotation=45)
-    plt.tight_layout()
+# so we can see when sensationalisation corresponds with certain events...
+events = {
+    1928: "First Television Broadcast",
+    1973: "Motorola Invents First Cellphone",
+    1998: "Google's Official Launch",
+    2007: "Apple's iPhone Launched"
+}
 
-    output_path = "nyt_sentiment_plot.png"
-    plt.savefig(output_path)
-    print(f"Saved plot to {output_path}")
+for year, label in events.items():
+    plt.axvline(pd.Timestamp(f"{year}-01-01"), color="black", linestyle="--", linewidth=1)
+    plt.text(pd.Timestamp(f"{year}-01-01"),
+             df["mean_vscore_title"].max(),
+             label,
+             rotation=90,
+             verticalalignment="bottom",
+             horizontalalignment="right")
 
-    return output_path
+# title and subtitle
+plt.suptitle("NYT Vader-Calculated Sentiment Over Time",
+             fontsize=16,
+             fontweight="bold",
+             ha="left",
+             x=0.0)
+
+plt.title("nice job america", fontsize=12, loc="left")
+
+plt.xlabel("Month")
+plt.ylabel("Average Sentiment Score")
+plt.legend()
+plt.xticks(rotation=45)
+plt.tight_layout()
+
+# making a png image of our graph. 
+output_path = "nyt_sentiment_plot.png"
+plt.savefig(output_path)
+print(f"Saved plot to {output_path}")
+
+# output path to our graph (it's a png image now) 
+return output_path
+
 
 
 # if we don't use this, nothing happens. 
